@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Panel</h2>
+
+<input id="room" placeholder="Room (ex: chris123)"><br><br>
+<input id="min" placeholder="Minimum"><br><br>
+<input id="timer" placeholder="Timer"><br><br>
+<input id="snipe" placeholder="Snipe"><br><br>
+
+<button onclick="send()">Envoyer</button>
+
+<script>
+const ws = new WebSocket("wss://" + location.host);
+
+function send(){
+    const room = document.getElementById("room").value;
+
+    ws.send(JSON.stringify({
+        type: "update",
+        room: room,
+        minimum: parseInt(min.value),
+        timer: parseInt(timer.value),
+        snipeDelay: parseInt(snipe.value)
+    }));
+}
+</script>
+
+</body>
+</html>
