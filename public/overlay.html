@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body { background: transparent; color: white; font-family: Arial; }
+.timer { font-size: 40px; }
+</style>
+</head>
+<body>
+
+<div id="timer">0</div>
+<div id="leaderboard"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const room = params.get("room");
+
+let players = {};
+let timer = 0;
+let snipeDelay = 0;
+
+const ws = new WebSocket("wss://" + location.host);
+
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if(data.room !== room) return;
+
+    if(data.type === "update"){
+        startTimer(data.timer, data.snipeDelay);
+    }
+
+    if(data.type === "gift"){
+        addGift(data.username, data.avatar, data.amount);
+    }
+};
+
+// TIMER
+function startTimer(t, delay){
+    timer = t;
+    snipeDelay = delay;
+
+    let el = document.getElementById("timer");
+
+    let interval = setInterval(()=>{
+        timer--;
+        el.innerText = timer;
+
+        if(timer <= 0){
+            clearInterval(interval);
+            startSnipe();
+        }
+    },1000);
+}
+
+// SNIPE
+function startSnipe(){
+    let delay = snipeDelay;
+    let el = document.getElementById("timer");
+
+    let interval = setInterval(()=>{
+        el.innerText = "SNIPE: " + delay;
+        delay--;
+
+        if(delay < 0){
+            clearInterval(interval);
+            el.innerText = "FINISHED";
+        }
+    },1000);
+}
+
+// GIFTS
+function addGift(username, avatar, amount){
+    if(!players[username]) players[username] = 0;
+    players[username] += amount;
+
+    render();
+}
+
+function render(){
+    let sorted = Object.entries(players).sort((a,b)=>b[1]-a[1]);
+
+    let html = "";
+    sorted.slice(0,3).forEach((p,i)=>{
+        html += `<div>${i+1}. ${p[0]} - ${p[1]}</div>`;
+    });
+
+    document.getElementById("leaderboard").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
